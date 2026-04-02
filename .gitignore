@@ -15,7 +15,7 @@ yarn-error.log*
 # plugin/outsourcing-technical-guides/assets/background.webp
 # plugin/outsourcing-technical-guides/assets/logo.webp
 # plugin/outsourcing-technical-guides/pdf/
-plugin\outsourcing-technical-guides\dist
+plugin/outsourcing-technical-guides/dist
 
 # ── OS ───────────────────────────────────────────────────────
 .DS_Store
