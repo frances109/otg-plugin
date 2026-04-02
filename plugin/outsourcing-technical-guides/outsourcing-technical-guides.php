@@ -21,6 +21,19 @@ define( 'OTG_DIST_URL',   OTG_PLUGIN_URL . 'dist/' );
 define( 'OTG_PDF_URL',    OTG_PLUGIN_URL . 'pdf/' );
 
 /* ═══════════════════════════════════════════════════════════════
+   SESSION BOOTSTRAP
+   Start session early enough for all hooks to use it.
+   Only starts once — safe to call multiple times.
+═══════════════════════════════════════════════════════════════ */
+add_action( 'init', 'otg_start_session', 1 );
+
+function otg_start_session() {
+    if ( session_status() === PHP_SESSION_NONE ) {
+        session_start();
+    }
+}
+
+/* ═══════════════════════════════════════════════════════════════
    1. FULL DOCUMENT OVERRIDE  (fixes Betheme / any theme conflict)
    ─────────────────────────────────────────────────────────────
    WHY wp_head() BREAKS THINGS:
@@ -42,13 +55,25 @@ function otg_maybe_render_page() {
     $download_slug = get_option( 'otg_download_page_slug', 'outsourcing-download-guides' );
 
     if ( is_page( $form_slug ) ) {
-        // Discard everything WordPress (and Betheme) would output
         while ( ob_get_level() ) ob_end_clean();
         include OTG_PLUGIN_DIR . 'templates/page-technical-guides.php';
-        exit; // ← stops WordPress/theme from printing anything else
+        exit;
     }
 
     if ( is_page( $download_slug ) ) {
+        // ── ACCESS GUARD ──────────────────────────────────────
+        // Only allow access if a valid token was written to the
+        // session by the REST submission handler. Anyone who hits
+        // this URL directly (no prior form submission) gets
+        // redirected back to the form page.
+        if ( empty( $_SESSION['otg_access_token'] ) ) {
+            wp_safe_redirect( home_url( '/' . $form_slug ) );
+            exit;
+        }
+
+        // Consume the token — one-time use, prevents reload-sharing.
+        unset( $_SESSION['otg_access_token'] );
+
         while ( ob_get_level() ) ob_end_clean();
         include OTG_PLUGIN_DIR . 'templates/page-download-guides.php';
         exit;
@@ -152,6 +177,9 @@ add_action( 'rest_api_init', function () {
 } );
 
 function otg_handle_submission( WP_REST_Request $request ) {
+    // Session must be active for the REST request too.
+    otg_start_session();
+
     $data = $request->get_params();
 
     $recap = otg_verify_recaptcha( $data['recaptcha_token'] );
@@ -165,6 +193,13 @@ function otg_handle_submission( WP_REST_Request $request ) {
     otg_store_flamingo( $data );
     otg_send_admin_notification( $data );
     otg_send_confirmation( $data );
+
+    // ── WRITE ACCESS TOKEN ─────────────────────────────────────
+    // A random token in the session tells the download page that
+    // this visitor just completed a valid form submission.
+    // The token is consumed (deleted) on first use — see the
+    // access guard in otg_maybe_render_page().
+    $_SESSION['otg_access_token'] = bin2hex( random_bytes( 16 ) );
 
     $slug = get_option( 'otg_download_page_slug', 'outsourcing-download-guides' );
     return new WP_REST_Response( [
@@ -199,9 +234,10 @@ function otg_verify_recaptcha( string $token ) {
 ═══════════════════════════════════════════════════════════════ */
 function otg_store_flamingo( array $d ) {
     if ( ! class_exists( 'Flamingo_Inbound_Message' ) ) return;
+
     Flamingo_Inbound_Message::add( [
         'channel'    => 'outsourcing-technical-guides',
-        'subject'    => sprintf( 'New Guide Request – %s %s (%s)', $d['first_name'], $d['last_name'], $d['company_name'] ),
+        'subject'    => sprintf( 'New Guide Request - %s %s (%s)', $d['first_name'], $d['last_name'], $d['company_name'] ),
         'from'       => sprintf( '%s %s <%s>', $d['first_name'], $d['last_name'], $d['work_email'] ),
         'from_name'  => trim( $d['first_name'] . ' ' . $d['last_name'] ),
         'from_email' => $d['work_email'],
@@ -217,7 +253,6 @@ function otg_store_flamingo( array $d ) {
 function otg_get_notify_emails(): array {
     $raw     = get_option( 'otg_notify_emails', get_option('admin_email') );
     $emails  = array_map( 'trim', explode( ',', $raw ) );
-    // Validate each address; silently drop invalid ones
     return array_values( array_filter( $emails, 'is_email' ) );
 }
 

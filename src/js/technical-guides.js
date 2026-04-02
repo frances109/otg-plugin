@@ -67,17 +67,25 @@
     var v = (el.value || '').trim();
     var err = '';
 
-    if (el.id === 'first_name' || el.id === 'last_name') {
-      if (!v)          err = 'This field is required.';
-      else if (v.length < 2) err = 'Minimum 2 characters.';
-    } else if (el.id === 'company_name') {
-      if (!v) err = 'This field is required.';
-    } else if (el.id === 'work_email') {
-      if (!v)                                             err = 'This field is required.';
-      else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v))   err = 'Please enter a valid email.';
-    } else if (el.id === 'phone_number') {
-      if (!v)                              err = 'This field is required.';
-      else if (iti && !iti.isValidNumber()) err = 'Please enter a valid phone number.';
+    var rules = {
+      first_name:   { required: true, minLength: 2 },
+      last_name:    { required: true, minLength: 2 },
+      company_name: { required: true },
+      work_email:   { required: true, email: true },
+      phone_number: { required: true, phone: true }
+    };
+
+    var rule = rules[el.id];
+    if (!rule) return true;
+
+    if (rule.required && !v) {
+      err = el.id.replace(/_/g, ' ').replace(/\b\w/g, function(c) { return c.toUpperCase(); }) + ' is required.';
+    } else if (rule.minLength && v.length < rule.minLength) {
+      err = 'Minimum ' + rule.minLength + ' characters.';
+    } else if (rule.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v)) {
+      err = 'Please enter a valid email.';
+    } else if (rule.phone && iti && !iti.isValidNumber()) {
+      err = 'Please enter a valid phone number.';
     }
 
     if (err) { showErr(el, err); return false; }
@@ -87,12 +95,12 @@
 
   function showErr(el, msg) {
     el.classList.add('is-invalid');
-    var wrap = el.closest('.iti') || el.parentElement;
+    var wrap = el.parentElement;
     var fb = wrap.querySelector('.mg-field-error');
     if (!fb) {
       fb = document.createElement('div');
       fb.className = 'mg-field-error';
-      wrap.parentElement.appendChild(fb);
+      el.parentElement.appendChild(fb);
     }
     fb.textContent = msg;
   }
@@ -200,6 +208,27 @@
     setTimeout(function () { el.classList.remove('show'); }, 5000);
   }
 
+  function animateCounter(element, target, duration, suffix = "") {
+    let start = 0;
+    let startTime = null;
+
+    function updateCounter(timestamp) {
+        if (!startTime) startTime = timestamp;
+        let progress = timestamp - startTime;
+        let value = Math.min(progress / duration * target, target);
+
+        element.textContent = Math.floor(value) + suffix;
+
+        if (progress < duration) {
+        requestAnimationFrame(updateCounter);
+        } else {
+        element.textContent = target + suffix;
+        }
+    }
+
+    requestAnimationFrame(updateCounter);
+  }
+
   /* ── BOOT ───────────────────────────────────────────────────── */
   function boot() {
     setYear();
@@ -214,6 +243,25 @@
       el.addEventListener('blur',  function () { validate(el); });
       el.addEventListener('input', function () { clearErr(el); });
     });
+
+    // Animate normal counters
+    document.querySelectorAll(".mg-stat-num[data-target]").forEach(el => {
+        const target = parseInt(el.getAttribute("data-target"));
+        
+        let suffix = "";
+        if (target === 500) suffix = "+";  // 500+
+        if (target === 99) suffix = "%";   // 99%
+
+        animateCounter(el, target, 2000, suffix);
+    });
+
+    // Years in BPO (2005 → present)
+    const startYear = 2005;
+    const currentYear = new Date().getFullYear();
+    const years = currentYear - startYear;
+
+    const yearsEl = document.getElementById("years-counter");
+    animateCounter(yearsEl, years, 2000, "+");
   }
 
   if (document.readyState === 'loading') {

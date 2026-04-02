@@ -74,56 +74,88 @@ $logo_url = $assets . 'logo.webp';
             </a>
           </div>
         </div>
-        <div class="col-12 col-md-4">
-          <div class="mg-guide-card h-100 p-4 d-flex flex-column">
-            <div class="mg-card-icon mb-3"><i class="bi bi-gear-wide-connected"></i></div>
-            <h3 class="mg-card-title mb-2">Back-Office &amp; Process Support</h3>
-            <p class="mg-card-desc flex-grow-1 mb-3">Data processing, finance operations &amp; compliance frameworks for growing businesses.</p>
-            <a href="<?php echo esc_url( $pdf_base . 'back-office-process-support.pdf' ); ?>"
-               download="Magellan-BackOffice-Guide.pdf" class="mg-dl-btn btn w-100 py-2">
-              <i class="bi bi-file-earmark-pdf"></i> Download PDF
-            </a>
-          </div>
-        </div>
-        <div class="col-12 col-md-4">
-          <div class="mg-guide-card h-100 p-4 d-flex flex-column">
-            <div class="mg-card-icon mb-3"><i class="bi bi-shield-check"></i></div>
-            <h3 class="mg-card-title mb-2">Technical Support &amp; Helpdesk</h3>
-            <p class="mg-card-desc flex-grow-1 mb-3">Escalation workflows, certifications &amp; real SLA examples from active engagements.</p>
-            <a href="<?php echo esc_url( $pdf_base . 'technical-support-helpdesk.pdf' ); ?>"
-               download="Magellan-Helpdesk-Guide.pdf" class="mg-dl-btn btn w-100 py-2">
-              <i class="bi bi-file-earmark-pdf"></i> Download PDF
-            </a>
-          </div>
-        </div>
+		<div class="col-12 col-md-4">
+		  <div class="mg-guide-card h-100 p-4 d-flex flex-column">
+			<div class="mg-card-icon mb-3"><i class="bi bi-gear-wide-connected"></i></div>
+			<h3 class="mg-card-title mb-2">Back-Office &amp; Process Support</h3>
+			<p class="mg-card-desc flex-grow-1 mb-3">Data processing, finance operations &amp; compliance frameworks for growing businesses.</p>
+			<div style="color: #8b0000; font-weight: 600; margin-bottom: 0.5rem; font-size: .7rem;">Currently Unavailable</div>			
+			<a href="<?php echo esc_url( $pdf_base . 'back-office-process-support.pdf' ); ?>"
+			   download="Magellan-BackOffice-Guide.pdf" class="mg-dl-btn btn w-100 py-2" disabled style="pointer-events: none; opacity: 0.6;">
+			  <i class="bi bi-file-earmark-pdf"></i> Download PDF
+			</a>
+		  </div>
+		</div>
+		<div class="col-12 col-md-4">
+		  <div class="mg-guide-card h-100 p-4 d-flex flex-column">
+			<div class="mg-card-icon mb-3"><i class="bi bi-shield-check"></i></div>
+			<h3 class="mg-card-title mb-2">Technical Support &amp; Helpdesk</h3>
+			<p class="mg-card-desc flex-grow-1 mb-3">Escalation workflows, certifications &amp; real SLA examples from active engagements.</p>
+			<div style="color: #8b0000; font-weight: 600; margin-bottom: 0.5rem; font-size: .7rem;">Currently Unavailable</div>
+			<a href="<?php echo esc_url( $pdf_base . 'technical-support-helpdesk.pdf' ); ?>"
+			   download="Magellan-Helpdesk-Guide.pdf" class="mg-dl-btn btn w-100 py-2" disabled style="pointer-events: none; opacity: 0.6;">
+			  <i class="bi bi-file-earmark-pdf"></i> Download PDF
+			</a>
+		  </div>
+		</div>
       </div>
 
-      <!-- WHAT'S NEXT -->
+      <!-- CONNECT & READINESS PANELS -->
+      <!-- <div class="mg-next-panel text-start p-4 mb-4 mg-fade-4">
+        <h4 class="mg-next-heading mb-2"><i class="bi bi-calendar2-check"></i> Connect With Business Development</h4>
+        <p class="mg-next-sub mb-3">Schedule a consultation with our team to discuss how outsourcing can solve your specific challenges.</p>
+        <a href="mailto:info@magellan-solutions.com" class="mg-dl-btn btn py-2" style="width:auto;">
+           Book a Consultation
+        </a>
+      </div>
+
       <div class="mg-next-panel text-start p-4 mb-4 mg-fade-4">
-        <h4 class="mg-next-heading mb-3">What happens next?</h4>
-        <div class="d-flex align-items-start gap-3 py-3 border-bottom border-secondary border-opacity-25">
-          <div class="mg-next-icon"><i class="bi bi-calendar2-check"></i></div>
-          <div><div class="mg-next-title mb-1">Book a discovery call</div>
-               <div class="mg-next-sub">Our team will follow up within 1 business day.</div></div>
+        <h4 class="mg-next-heading mb-2">Check Your Outsourcing Readiness</h4>
+        <p class="mg-next-sub mb-3">Take our quick 3-minute scorecard to see if your company is ready to outsource effectively.</p>
+        <a href="https://www.magellan-solutions.com/outsourcing-scorecard" class="mg-dl-btn btn py-2" target="_blank" style="width:auto;">
+          <i class="bi bi-clipboard2-check"></i> Start Assessment
+        </a>
+      </div> -->
+	  <div class="mg-next-panel text-start p-4 mb-4 mg-fade-4">
+		<div class="d-flex align-items-start gap-3">
+        	<div class="mg-next-icon"><i class="bi bi-calendar2-check"></i></div>
+			<div>
+				<div class="mg-next-title mb-1">Connect With Business Development</div>
+				<div class="mg-next-sub">Schedule a consultation with our team to discuss how outsourcing can solve your specific challenges.</div>
+			</div>
         </div>
-        <div class="d-flex align-items-start gap-3 py-3 border-bottom border-secondary border-opacity-25">
-          <div class="mg-next-icon"><i class="bi bi-graph-up-arrow"></i></div>
-          <div><div class="mg-next-title mb-1">Receive a custom proposal</div>
-               <div class="mg-next-sub">A tailored outsourcing plan based on your needs and scale.</div></div>
+		
+		<div class="d-flex align-items-center justify-content-start mt-3">				
+			<a href="mailto:info@magellan-solutions.com" class="mg-dl-btn btn py-2" style="width:auto;">
+				Book a Consultation
+			</a>
+		</div>
+      </div>
+ 
+      <div class="mg-next-panel text-start p-4 mb-4 mg-fade-4">
+		<div class="d-flex align-items-start gap-3">
+        	<div class="mg-next-icon"><i class="bi bi-rocket-takeoff"></i></div>
+			<div>
+				<div class="mg-next-title mb-1">Check Your Outsourcing Readiness</div>
+				<div class="mg-next-sub">Take our quick 3-minute scorecard to see if your company is ready to outsource effectively.</div>
+			</div>
+			 <!-- <a href="https://www.magellan-solutions.com/outsourcing-scorecard" class="mg-dl-btn btn py-2" target="_blank" style="width:auto;">
+				Start Assessment
+				</a> -->
         </div>
-        <div class="d-flex align-items-start gap-3 pt-3">
-          <div class="mg-next-icon"><i class="bi bi-rocket-takeoff"></i></div>
-          <div><div class="mg-next-title mb-1">Launch your engagement</div>
-               <div class="mg-next-sub">Onboard within days with a dedicated client success manager.</div></div>
-        </div>
+		<div class="d-flex align-items-center justify-content-start mt-3">
+			<a href="https://www.magellan-solutions.com/outsourcing-scorecard" class="mg-dl-btn btn py-2" target="_blank" style="width:auto;">
+				Start Assessment
+			</a>
+		</div>
       </div>
 
       <!-- ACTIONS -->
       <div class="mg-dl-cta-bar mg-fade-5">
-        <a href="mailto:info@magellan-solutions.com"
+        <!-- <a href="mailto:info@magellan-solutions.com"
            class="mg-cta-btn btn px-4 py-2 d-inline-flex align-items-center gap-2">
           <i class="bi bi-chat-dots"></i> Talk to Our Team
-        </a>
+        </a> -->
         <a href="<?php echo esc_url( $form_url ); ?>" class="mg-back-link d-inline-flex align-items-center gap-2">
           <i class="bi bi-arrow-left"></i> Back to Guides Form
         </a>

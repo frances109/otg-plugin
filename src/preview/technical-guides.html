@@ -63,9 +63,20 @@
         evaluate outsourcing partners with clarity and confidence.
       </p>
       <div class="mg-stats-row d-flex flex-wrap mb-4 mg-fade-4">
-        <div class="mg-stat"><div class="mg-stat-num">500+</div><div class="mg-stat-label">SMEs Served</div></div>
-        <div class="mg-stat"><div class="mg-stat-num">18+</div><div class="mg-stat-label">Years in BPO</div></div>
-        <div class="mg-stat"><div class="mg-stat-num">99%</div><div class="mg-stat-label">SLA Compliance</div></div>
+        <div class="mg-stat">
+          <div class="mg-stat-num" data-target="500">0</div>
+          <div class="mg-stat-label">SMEs Served</div>
+        </div>
+
+        <div class="mg-stat">
+          <div class="mg-stat-num" id="years-counter">0</div>
+          <div class="mg-stat-label">Years in BPO</div>
+        </div>
+
+        <div class="mg-stat">
+          <div class="mg-stat-num" data-target="99">0</div>
+          <div class="mg-stat-label">SLA Compliance</div>
+        </div>
       </div>
       <div class="d-flex flex-column gap-2 mg-fade-5">
         <div class="mg-feature d-flex align-items-start gap-3 p-3">
@@ -94,24 +105,24 @@
         </p>
         <form id="mg-guide-form" method="post" action="#" novalidate autocomplete="off">
           <div class="row g-3 mb-3">
-            <div class="col-6">
+            <div class="col-6 first-name-wrap">
               <label class="mg-label" for="first_name">First Name <span class="mg-req">*</span></label>
               <input type="text" id="first_name" name="first_name" class="mg-input" placeholder="Jane" required>
             </div>
-            <div class="col-6">
+            <div class="col-6 last-name-wrap">
               <label class="mg-label" for="last_name">Last Name <span class="mg-req">*</span></label>
               <input type="text" id="last_name" name="last_name" class="mg-input" placeholder="Doe" required>
             </div>
           </div>
-          <div class="mb-3">
+          <div class="mb-3 company-wrap">
             <label class="mg-label" for="company_name">Company Name <span class="mg-req">*</span></label>
             <input type="text" id="company_name" name="company_name" class="mg-input" placeholder="Acme Corporation" required>
           </div>
-          <div class="mb-3">
+          <div class="mb-3 email-wrap">
             <label class="mg-label" for="work_email">Work Email <span class="mg-req">*</span></label>
             <input type="email" id="work_email" name="work_email" class="mg-input" placeholder="jane@company.com" required>
           </div>
-          <div class="mb-3">
+          <div class="mb-3 phone-number-wrap">
             <label class="mg-label" for="phone_number">Phone Number <span class="mg-req">*</span></label>
             <input type="tel" id="phone_number" name="phone_number" class="mg-input" placeholder="912 345 6789" required>
           </div>

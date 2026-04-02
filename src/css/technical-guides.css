@@ -310,6 +310,9 @@
 .mg-trust p { font-size: .7rem; color: var(--mg-muted); line-height: 1.55; }
 
 /* ── RESPONSIVE ─────────────────────────────────────────────── */
+@media (max-width:1199.98px) {
+  .mg-form-card { max-width: 80%; }
+}
 @media (max-width:991.98px) {
   .mg-hero-col { padding: 3rem 1.5rem !important; }
   .mg-form-col { padding: 3rem 1.25rem !important; min-height: auto; }

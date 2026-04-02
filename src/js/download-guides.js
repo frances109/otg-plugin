@@ -5,6 +5,12 @@
 (function () {
   'use strict';
 
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', boot);
+  } else {
+    boot();
+  }
+
   function setYear() {
     var els = document.querySelectorAll('.mg-year');
     var y   = new Date().getFullYear();
@@ -43,16 +49,17 @@
     }
   }
 
+  function guardAccess() {
+    if ( ! sessionStorage.getItem('mg_first_name') ) {
+      window.location.replace('technical-guides.html');
+    }
+  }
+
   function boot() {
+    // guardAccess();
     setYear();
     setGreeting();
     spawnDots();
-  }
-
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', boot);
-  } else {
-    boot();
   }
 
 })();
