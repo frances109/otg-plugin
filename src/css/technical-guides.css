@@ -16,6 +16,7 @@
 .mg-hero-col {
   position: relative;
   overflow: hidden;
+  padding-left: 12rem !important;
 }
 
 .mg-hero-col::before {
@@ -54,7 +55,7 @@
 /* ── HERO TYPOGRAPHY ────────────────────────────────────────── */
 .mg-quote {
   font-size: clamp(1.8rem, 3vw, 2.6rem);
-  font-weight: 600;
+  font-weight: 500;
   line-height: 1.2;
   color: var(--mg-white);
   letter-spacing: -.01em;
@@ -62,8 +63,8 @@
 /* Image 1: "Resilient, Scalable Operations." is cyan + italic + light weight */
 .mg-quote em {
   color: var(--mg-cyan);
-  font-style: italic;
-  font-weight: 300;
+  font-style: unset;
+  font-weight: 500;
 }
 
 .mg-hero-desc {

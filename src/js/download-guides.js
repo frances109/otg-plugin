@@ -24,7 +24,7 @@
     if (firstName) {
       el.innerHTML =
         'Hi ' + firstName +
-        ', your guides are <span style="color:var(--mg-cyan);font-style:italic">Ready.</span>';
+        ', your guides are <span style="color:var(--mg-cyan);font-style:unset">Ready.</span>';
     }
   }
 

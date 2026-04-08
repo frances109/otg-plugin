@@ -21,7 +21,7 @@ define( 'OTG_DIST_URL',   OTG_PLUGIN_URL . 'dist/' );
 define( 'OTG_PDF_URL',    OTG_PLUGIN_URL . 'pdf/' );
 
 /* Email template builders live in a dedicated file */
-require_once OTG_PLUGIN_DIR . 'email-templates.php';
+require_once OTG_PLUGIN_DIR . 'php/email-templates.php';
 
 /* ═══════════════════════════════════════════════════════════════
    SESSION BOOTSTRAP
@@ -189,7 +189,9 @@ function otg_handle_submission( WP_REST_Request $request ) {
 
     otg_store_flamingo( $data );
     otg_send_admin_notification( $data );
-    otg_send_confirmation( $data );
+    
+    // Optional: send confirmation email to user immediately on form submit
+    // otg_send_confirmation( $data );
 
     // Grant access to the download page (one-time token)
     $_SESSION['otg_access_token'] = bin2hex( random_bytes( 16 ) );

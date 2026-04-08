@@ -65,13 +65,13 @@
    "Ready." — italic cyan, same light weight. */
 .mg-dl-heading {
   font-size: clamp(2rem, 4.5vw, 3rem);
-  font-weight: 500; line-height: 1.18; color: var(--mg-white);
+  font-weight: 800; line-height: 1.18; color: var(--mg-white);
 }
 .mg-dl-heading span,
 .mg-dl-heading em {
   color: var(--mg-cyan);
-  /* font-style: italic; */
-  font-weight: 300;
+  font-style: unset;
+  font-weight: 800;
 }
 
 /* Image 2: Subtitle is a single muted line, no "Thank you" prefix. */

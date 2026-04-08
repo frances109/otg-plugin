@@ -73,17 +73,17 @@ $contact = isset( $_SESSION['otg_contact'] ) ? $_SESSION['otg_contact'] : [];
             <div class="mg-dl-inner w-100 text-center">
 
                 <div class="mg-check-ring mx-auto mb-4"><i class="bi bi-check-lg"></i></div>
-                <div class="mg-tag mb-2"><i class="bi bi-stars me-1"></i>Ready for Download</div>
+                <div class="mg-tag mb-3"><i class="bi bi-stars me-1"></i>Ready for Download</div>
 
-                <h1 class="mg-dl-heading mb-2 mg-fade-2" id="mg-greeting">
-                Your Guides Are <span>Ready.</span>
+                <h1 class="mg-dl-heading my-2 mg-fade-2" id="mg-greeting">
+                    Your Guides Are <span>Ready.</span>
                 </h1>
-                <p class="mg-dl-sub mx-auto mb-5 mg-fade-2">
+                <!-- <p class="mg-dl-sub mx-auto mb-5 mg-fade-2">
                 Thank you for your interest in Magellan Solutions. Click any guide below to download it as a PDF.
-                </p>
+                </p> -->
 
                 <!-- GUIDE CARDS -->
-                <div class="row g-4 mb-4 mg-fade-3">
+                <div class="row g-4 my-2 mg-fade-3">
                     <div class="col-12 col-md-4">
                         <div class="mg-guide-card h-100 p-4 d-flex flex-column">
                         <div class="mg-card-icon mb-3"><i class="bi bi-headset"></i></div>
@@ -129,7 +129,7 @@ $contact = isset( $_SESSION['otg_contact'] ) ? $_SESSION['otg_contact'] : [];
                     </div>
                 </div>
 
-                <div class="mg-next-panel text-start p-4 mb-4 mg-fade-4">
+                <div class="mg-next-panel text-start p-4 my-4 mg-fade-4">
                     <div class="d-flex align-items-start gap-3">
                     <div class="mg-next-icon"><i class="bi bi-calendar2-check"></i></div>
                         <div>
