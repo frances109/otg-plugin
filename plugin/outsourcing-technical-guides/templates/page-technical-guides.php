@@ -43,7 +43,8 @@ $logo_url  = $assets . 'logo.webp';
             ajaxUrl:          <?php echo wp_json_encode( $rest_url ); ?>,
             nonce:            <?php echo wp_json_encode( $nonce ); ?>,
             recaptchaSiteKey: <?php echo wp_json_encode( $site_key ); ?>,
-            downloadPage:     <?php echo wp_json_encode( $dl_url ); ?>
+            downloadPage:     <?php echo wp_json_encode( $dl_url ); ?>,
+            itiUtilsUrl:      <?php echo wp_json_encode( 'https://cdn.jsdelivr.net/npm/intl-tel-input@21.1.4/build/js/utils.js' ); ?>
             };
         </script>
 

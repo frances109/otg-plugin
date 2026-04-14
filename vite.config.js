@@ -4,10 +4,6 @@
 //  npm run build   → minifies src/ → plugin/dist/  (via build.mjs)
 //  npm run preview → preview the production build locally
 //
-//  NOTE: Both JS entry points are plain IIFEs with no ES module
-//  imports, so Rollup/Vite cannot bundle them as 'iife' with
-//  multiple inputs (Rollup hard constraint). The build script
-//  (build.mjs) uses esbuild + clean-css directly instead.
 // ─────────────────────────────────────────────────────────────
 
 import { defineConfig } from 'vite';

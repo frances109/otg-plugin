@@ -21,15 +21,22 @@
   <link rel="stylesheet" href="../css/base.css">
   <link rel="stylesheet" href="../css/technical-guides.css">
 
-  <script type="module" src="../js/technical-guides.js"></script>
+  <!--
+    DEV MODE — JS:
+    Load the ES module entry point directly. Vite serves it with HMR.
+    intl-tel-input is loaded as a global <script> at the bottom of the page;
+    phone.js retries until it is available.
+  -->
+  <script type="module" src="../js/technical-guides/main.js"></script>
 
-  <!-- Simulated WordPress MagellanConfig (mock — form won't actually submit locally) -->
+  <!-- Simulated WordPress MagellanConfig (mirrors what page-technical-guides.php injects) -->
   <script>
     window.MagellanConfig = {
       ajaxUrl:          '',
       nonce:            'dev-nonce',
       recaptchaSiteKey: '',
-      downloadPage:     '/src/preview/download-guides.html'
+      downloadPage:     '/src/preview/download-guides.html',
+      itiUtilsUrl:      'https://cdn.jsdelivr.net/npm/intl-tel-input@21.1.4/build/js/utils.js'
     };
   </script>
 </head>
