@@ -66,7 +66,8 @@ if ( ! $hub_mode ) : ?>
                 nonce:            <?php echo wp_json_encode( $nonce ); ?>,
                 recaptchaSiteKey: <?php echo wp_json_encode( $site_key ); ?>,
                 downloadPage:     <?php echo wp_json_encode( $dl_url ); ?>,
-                itiUtilsUrl:      <?php echo wp_json_encode( 'https://cdn.jsdelivr.net/npm/intl-tel-input@21.1.4/build/js/utils.js' ); ?>
+                itiUtilsUrl:      <?php echo wp_json_encode( 'https://cdn.jsdelivr.net/npm/intl-tel-input@21.1.4/build/js/utils.js' ); ?>,
+                geoUrl:           <?php echo wp_json_encode( $hub_mode ? rest_url( 'magellan/v1/geo' ) : rest_url( 'otg/v1/geo' ) ); ?>
             };
         </script>
         <?php if ( $site_key ) : ?>

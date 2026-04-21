@@ -44,10 +44,21 @@ export function initPhoneInput(fieldId, opts = {}) {
         return;
       }
 
+      const MG = window.MagellanConfig ?? {};
+
       const iti = intlTelInput(el, {
-        initialCountry:     'ph',
+        initialCountry:     'auto',
         separateDialCode:   true,
         preferredCountries: ['ph', 'us', 'gb', 'au', 'sg'],
+        geoIpLookup: cb => {
+          // Use the WP-proxied geo endpoint to avoid ad-blocker blocks on ipapi.co.
+          // A 3s safety timeout ensures iti always finishes initialising.
+          const fallback = setTimeout(() => cb('ph'), 3000);
+          fetch(MG.geoUrl || 'https://ipapi.co/json')
+            .then(r => r.json())
+            .then(d => { clearTimeout(fallback); cb(d.country_code || 'ph'); })
+            .catch(()  => { clearTimeout(fallback); cb('ph'); });
+        },
         ...opts,
       });
 

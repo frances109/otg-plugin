@@ -24,7 +24,8 @@ export async function submitForm(payload, config) {
   if (config.nonce) headers['X-WP-Nonce'] = config.nonce;
 
   const response = await fetch(config.ajaxUrl, {
-    method:  'POST',
+    method:      'POST',
+    credentials: 'same-origin',  // send PHPSESSID cookie so session persists to redirect page
     headers,
     body:    JSON.stringify({ ...payload, recaptcha_token: token }),
   });

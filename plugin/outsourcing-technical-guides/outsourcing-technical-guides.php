@@ -5,7 +5,7 @@
  * Description:  Full-page Executive Guides flow with reCAPTCHA v3 and Flamingo.
  *               Works standalone OR as a Magellan Hub project (auto-detected).
  *               Completely overrides the active theme — zero theme CSS interference.
- * Version:      1.1.1
+ * Version:      1.1.2
  * Author:       Magellan Solutions
  * License:      GPL-2.0+
  * Text Domain:  outsourcing-technical-guides
@@ -245,6 +245,12 @@ add_action( 'rest_api_init', function (): void {
             'guide_name'   => [ 'required' => false, 'sanitize_callback' => 'sanitize_text_field', 'default' => '' ],
         ],
     ] );
+
+    register_rest_route( 'otg/v1', '/geo', [
+        'methods'             => 'GET',
+        'callback'            => 'otg_geo_lookup',
+        'permission_callback' => '__return_true',
+    ] );
 } );
 
 function otg_handle_submission( WP_REST_Request $request ): WP_REST_Response {
@@ -308,6 +314,11 @@ function otg_verify_recaptcha( string $token ) {
     $secret = otg_get_setting( 'otg_recaptcha_secret_key' );
     if ( empty( $secret ) ) return true;
 
+    // Reject sentinel tokens that indicate a client-side load failure
+    if ( empty( $token ) || in_array( $token, [ 'not-loaded', 'dev-bypass' ], true ) ) {
+        return new WP_Error( 'recaptcha_low_score', 'reCAPTCHA score too low. Please try again.' );
+    }
+
     $res = wp_remote_post( 'https://www.google.com/recaptcha/api/siteverify', [
         'body' => [ 'secret' => $secret, 'response' => $token ],
     ] );
@@ -316,9 +327,27 @@ function otg_verify_recaptcha( string $token ) {
     }
     $body = json_decode( wp_remote_retrieve_body( $res ), true );
     if ( empty( $body['success'] ) || ( isset( $body['score'] ) && $body['score'] < 0.5 ) ) {
-        return new WP_Error( 'recaptcha_low_score', 'reCAPTCHA validation failed. Please try again.' );
+        return new WP_Error( 'recaptcha_low_score', 'reCAPTCHA score too low. Please try again.' );
     }
     return true;
+}
+
+/**
+ * Server-side geo lookup proxy — avoids ad-blocker blocks on direct ipapi.co calls.
+ * Returns { country_code: "PH" } on any failure so intl-tel-input always resolves.
+ */
+function otg_geo_lookup(): WP_REST_Response {
+    $res = wp_remote_get( 'https://ipapi.co/json/', [
+        'timeout' => 5,
+        'headers' => [ 'User-Agent' => 'WordPress/' . get_bloginfo( 'version' ) ],
+    ] );
+    if ( is_wp_error( $res ) ) {
+        return new WP_REST_Response( [ 'country_code' => 'PH' ], 200 );
+    }
+    $body = json_decode( wp_remote_retrieve_body( $res ), true );
+    return new WP_REST_Response( [
+        'country_code' => strtoupper( $body['country_code'] ?? 'PH' ),
+    ], 200 );
 }
 
 /* ═══════════════════════════════════════════════════════════════
