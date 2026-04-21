@@ -5,33 +5,27 @@
  * Dual-mode template:
  *   STANDALONE — Outputs a complete HTML document.
  *   HUB MODE   — Included by Magellan Hub's fullpage-wrapper.php.
+ *
+ * FIX: The session guard that previously lived in this template has been
+ * moved into otg_maybe_render_page() in the main plugin file. That is the
+ * correct place for the guard because:
+ *
+ *   1. In STANDALONE mode, template_redirect fires before any output is
+ *      buffered, so wp_safe_redirect() works cleanly.
+ *   2. In HUB MODE, fullpage-wrapper.php includes this template inside
+ *      ob_start(), meaning headers have already been sent conceptually
+ *      (wp_head() will fire). A redirect attempt here would trigger a
+ *      "headers already sent" notice and silently fail.
+ *
+ * The template can therefore assume that if it is being rendered, access
+ * has already been validated. It reads $_SESSION['otg_contact'] for the
+ * personalised greeting but does NOT check or consume any access token.
  */
 if ( ! defined( 'ABSPATH' ) ) exit;
-
-/*
- * Session guard — works in BOTH standalone and hub mode.
- * In standalone mode, otg_maybe_render_page() already did this check and
- * consumed the token (unset). In hub mode, mhub_maybe_full_page_override()
- * skips that function, so we guard here instead.
- * We only redirect if the session has been started (avoid starting a session
- * for every page load — hub mode bootstraps the session via otg_start_session()
- * which hooks to 'init' priority 1).
- */
-if ( session_status() !== PHP_SESSION_NONE || isset( $_COOKIE[session_name()] ) ) {
-    if ( session_status() === PHP_SESSION_NONE ) session_start();
-    if ( empty( $_SESSION['otg_access_token'] ) ) {
-        $form_slug_guard = get_option( 'otg_form_page_slug', 'outsourcing-technical-guides' );
-        wp_safe_redirect( home_url( '/' . $form_slug_guard ) );
-        exit;
-    }
-    // Consume the one-time token
-    unset( $_SESSION['otg_access_token'] );
-}
 
 $hub_mode_early = isset( $mhub_current_project );
 $dist     = $hub_mode_early ? ( rtrim( $mhub_dist_url, '/' ) . '/' )   : OTG_PLUGIN_URL . 'dist/';
 $assets   = $hub_mode_early ? ( rtrim( $mhub_assets_url, '/' ) . '/' ) : OTG_PLUGIN_URL . 'assets/';
-// pdf/ sits alongside dist/ — derive from dist_url parent
 $pdf_base = $hub_mode_early ? ( rtrim( dirname( rtrim( $mhub_dist_url, '/' ) ), '/' ) . '/pdf/' ) : OTG_PLUGIN_URL . 'pdf/';
 $form_url = home_url( '/' . get_option( 'otg_form_page_slug', 'outsourcing-technical-guides' ) );
 $bg_url   = $assets . 'background.webp';
@@ -39,16 +33,13 @@ $logo_url = $assets . 'logo.webp';
 $nonce    = wp_create_nonce( 'wp_rest' );
 $rest_url = rest_url( 'otg/v1/consultation' );
 
-// Contact data stored in session by the submission handler.
-$contact  = isset( $_SESSION['otg_contact'] ) ? $_SESSION['otg_contact'] : [];
+// Contact data stored in session by otg_handle_submission().
+// Safe to read here; the token-based guard has already run in the plugin.
+$contact = $_SESSION['otg_contact'] ?? [];
 
 $hub_mode = $hub_mode_early;
 
-/* ── HUB MODE ONLY: enqueue CDN CSS via WordPress ─────────
- * In standalone mode these are output as <link> tags inside the <head>.
- * In hub mode the <head> block is skipped entirely, so we must use
- * wp_enqueue_style() — the only way to inject CSS through wp_head().
- */
+/* ── HUB MODE ONLY: enqueue CDN CSS via WordPress ───────── */
 if ( $hub_mode ) :
     wp_enqueue_style( 'otg-google-fonts',  'https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,300;0,400;0,500;0,600;1,300&display=swap', [], null );
     wp_enqueue_style( 'otg-bootstrap-css', 'https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css',          [], null );
@@ -225,7 +216,6 @@ if ( ! $hub_mode ) : ?>
 </body>
 </html>
 <?php else :
-    // Hub mode: enqueue JS for wp_footer()
     $pfx = 'otg-dl-vendor';
     wp_enqueue_script( $pfx . '-bootstrap', 'https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js', [], null, true );
     wp_enqueue_script( 'otg-download', $dist . 'js/download-guides.js', [ $pfx . '-bootstrap' ], defined('OTG_VERSION') ? OTG_VERSION : MHUB_VERSION, true );

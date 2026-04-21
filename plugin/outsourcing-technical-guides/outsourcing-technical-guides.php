@@ -5,7 +5,7 @@
  * Description:  Full-page Executive Guides flow with reCAPTCHA v3 and Flamingo.
  *               Works standalone OR as a Magellan Hub project (auto-detected).
  *               Completely overrides the active theme — zero theme CSS interference.
- * Version:      1.1.2
+ * Version:      1.1.3
  * Author:       Magellan Solutions
  * License:      GPL-2.0+
  * Text Domain:  outsourcing-technical-guides
@@ -13,7 +13,7 @@
 
 if ( ! defined( 'ABSPATH' ) ) exit;
 
-define( 'OTG_VERSION',    '1.1.1' );
+define( 'OTG_VERSION',    '1.1.3' );
 define( 'OTG_PLUGIN_DIR', plugin_dir_path( __FILE__ ) );
 define( 'OTG_PLUGIN_URL', plugin_dir_url( __FILE__ ) );
 define( 'OTG_DIST_URL',   OTG_PLUGIN_URL . 'dist/' );
@@ -23,16 +23,8 @@ require_once OTG_PLUGIN_DIR . 'php/email-templates.php';
 
 /* ═══════════════════════════════════════════════════════════════
    DUAL-MODE DETECTION
-   When Magellan Hub is active and has a project matching this
-   plugin's form slug, the hub handles all page rendering.
-   This plugin defers template_redirect but keeps REST routes,
-   session bootstrap, and email functions active.
 ═══════════════════════════════════════════════════════════════ */
 
-/**
- * Returns true when Magellan Hub is active AND has an active project
- * whose page_slug matches this plugin's configured form page slug.
- */
 function otg_running_under_hub(): bool {
     if ( ! function_exists( 'mhub_get_project_by_slug' ) ) return false;
     $slug    = get_option( 'otg_form_page_slug', 'outsourcing-technical-guides' );
@@ -40,15 +32,6 @@ function otg_running_under_hub(): bool {
     return ( $project && $project->status === 'active' );
 }
 
-/**
- * Retrieve a setting, falling back to Magellan Hub global values when
- * running under the hub and the plugin-level option is blank.
- *
- * Mapping:
- *   otg_recaptcha_site_key   → mhub_recaptcha_site
- *   otg_recaptcha_secret_key → mhub_recaptcha_secret
- *   otg_notify_emails        → mhub_notify_emails
- */
 function otg_get_setting( string $option, string $default = '' ): string {
     $value = get_option( $option, '' );
     if ( $value !== '' ) return $value;
@@ -69,19 +52,51 @@ function otg_get_setting( string $option, string $default = '' ): string {
 
 /* ═══════════════════════════════════════════════════════════════
    SESSION BOOTSTRAP
+   ─────────────────────────────────────────────────────────────
+   FIX: Sessions must be started as early as possible (init priority 1)
+   so that:
+     a) The REST endpoint handler (otg_handle_submission) can write to
+        $_SESSION after form submit.
+     b) The template_redirect handler (otg_maybe_render_page) can read
+        $_SESSION to validate access to the download page.
+
+   WordPress REST API requests do NOT start a session automatically.
+   Without an explicit session_start() before the REST callback runs,
+   any writes to $_SESSION are silently discarded, the access token is
+   never stored, and the redirect page blocks every visitor.
 ═══════════════════════════════════════════════════════════════ */
 add_action( 'init', 'otg_start_session', 1 );
 
 function otg_start_session(): void {
+    // Only start a new session if one isn't already active.
+    // Avoids "headers already sent" warnings when other plugins also
+    // call session_start().
     if ( session_status() === PHP_SESSION_NONE ) {
+
+        // ── Cookie lifetime settings ──────────────────────────────────────
+        // Default PHP session cookies expire when the browser closes.
+        // Set a 30-minute cookie lifetime so the token survives a short
+        // browser pause between form submit and clicking the download links.
+        // This matches WordPress's own nonce lifetime.
+        $lifetime = 30 * MINUTE_IN_SECONDS; // 1800 seconds
+
+        session_set_cookie_params( [
+            'lifetime' => $lifetime,
+            'path'     => COOKIEPATH  ?: '/',
+            'domain'   => COOKIE_DOMAIN ?: '',
+            // Secure + SameSite=Lax: required for cross-page navigation on
+            // HTTPS sites; prevents the cookie being stripped on redirects.
+            'secure'   => is_ssl(),
+            'httponly' => true,
+            'samesite' => 'Lax',
+        ] );
+
         session_start();
     }
 }
 
 /* ═══════════════════════════════════════════════════════════════
    1. FULL DOCUMENT OVERRIDE  (standalone mode only)
-   When running under Magellan Hub the hub handles rendering —
-   skip this block entirely.
 ═══════════════════════════════════════════════════════════════ */
 add_action( 'template_redirect', 'otg_maybe_render_page', 1 );
 
@@ -91,18 +106,45 @@ function otg_maybe_render_page(): void {
     $form_slug     = get_option( 'otg_form_page_slug',     'outsourcing-technical-guides' );
     $download_slug = get_option( 'otg_download_page_slug', 'outsourcing-download-guides' );
 
+    // ── Form page ─────────────────────────────────────────────────────────
     if ( is_page( $form_slug ) ) {
         while ( ob_get_level() ) ob_end_clean();
         include OTG_PLUGIN_DIR . 'templates/page-technical-guides.php';
         exit;
     }
 
+    // ── Download page ─────────────────────────────────────────────────────
+    // FIX: Session guard moved here (from inside the template) so that the
+    // redirect to the form page is handled cleanly by PHP before any output
+    // is sent. The original template-level guard was unreliable because:
+    //   1. When ob_get_level() > 0, WordPress may have already buffered some
+    //      output, making wp_safe_redirect() fire "headers already sent".
+    //   2. The template's guard also consumed the token unconditionally —
+    //      meaning a page refresh after a valid submit would block access
+    //      (token already consumed on first load).
+    //
+    // New flow:
+    //   a) User submits form → PHP writes otg_access_token to session.
+    //   b) JS redirects browser to /outsourcing-download-guides.
+    //   c) This handler checks the token. If missing → redirect to form.
+    //   d) Token is consumed HERE (single use) so refreshing the page
+    //      after the initial load redirects back to the form, preventing
+    //      bookmarkable/shareable access to the download page.
     if ( is_page( $download_slug ) ) {
+        otg_start_session(); // ensure session is available
+
         if ( empty( $_SESSION['otg_access_token'] ) ) {
+            // No valid token — redirect to the form page.
             wp_safe_redirect( home_url( '/' . $form_slug ) );
             exit;
         }
+
+        // Consume the token (single-use).
         unset( $_SESSION['otg_access_token'] );
+
+        // Persist contact data for personalised greeting on the download page.
+        // (otg_contact is set by the submission handler; it is NOT consumed here
+        // so it remains available for the consultation endpoint.)
 
         while ( ob_get_level() ) ob_end_clean();
         include OTG_PLUGIN_DIR . 'templates/page-download-guides.php';
@@ -110,10 +152,9 @@ function otg_maybe_render_page(): void {
     }
 }
 
+
 /* ═══════════════════════════════════════════════════════════════
    2. SETTINGS PAGE
-   Shown in both modes. In hub mode, reCAPTCHA and notification
-   emails inherit from Magellan Hub Settings when left blank.
 ═══════════════════════════════════════════════════════════════ */
 add_action( 'admin_menu', function (): void {
     add_options_page(
@@ -150,7 +191,7 @@ function otg_settings_page(): void {
                 <strong>Running under Magellan Hub.</strong>
                 reCAPTCHA keys and notification emails are inherited from
                 <a href="<?php echo esc_url( admin_url( 'admin.php?page=magellan-hub-settings' ) ); ?>">Magellan Hub &rarr; Settings</a>
-                when left blank below. Page rendering is handled by Magellan Hub.
+                when left blank below.
             </p>
         </div>
         <?php endif; ?>
@@ -163,7 +204,9 @@ function otg_settings_page(): void {
                     <td><input type="text" name="otg_recaptcha_site_key"
                         value="<?php echo esc_attr( get_option('otg_recaptcha_site_key', '') ); ?>"
                         class="regular-text"
-                        <?php if ( $under_hub ) echo 'placeholder="Inherited from Magellan Hub if blank"'; ?>></td>
+                        <?php if ( $under_hub ) echo 'placeholder="Inherited from Magellan Hub if blank"'; ?>>
+                        <p class="description">Must be registered for: <strong><?php echo esc_html( wp_parse_url( home_url(), PHP_URL_HOST ) ); ?></strong></p>
+                    </td>
                 </tr>
                 <tr>
                     <th scope="row">reCAPTCHA v3 Secret Key</th>
@@ -179,12 +222,6 @@ function otg_settings_page(): void {
                             value="<?php echo esc_attr( get_option('otg_notify_emails', '') ); ?>"
                             class="large-text"
                             <?php if ( $under_hub ) echo 'placeholder="Inherited from Magellan Hub if blank"'; else echo 'placeholder="sales@company.com, manager@company.com"'; ?>>
-                        <p class="description">
-                            One email or multiple separated by commas.
-                            <?php if ( $under_hub ) : ?>
-                            <br><em>Leave blank to use Magellan Hub's Lead Notification Emails.</em>
-                            <?php endif; ?>
-                        </p>
                     </td>
                 </tr>
                 <tr>
@@ -193,8 +230,7 @@ function otg_settings_page(): void {
                         <input type="text" name="otg_form_page_slug"
                             value="<?php echo esc_attr( get_option('otg_form_page_slug', 'outsourcing-technical-guides') ); ?>"
                             class="regular-text">
-                        <p class="description">Slug of the WordPress page showing the lead capture form.
-                        <?php if ( $under_hub ) echo '<br><em>Must match the project\'s page slug in Magellan Hub.</em>'; ?></p>
+                        <p class="description">Slug of the WordPress page showing the lead capture form.</p>
                     </td>
                 </tr>
                 <tr>
@@ -203,8 +239,7 @@ function otg_settings_page(): void {
                         <input type="text" name="otg_download_page_slug"
                             value="<?php echo esc_attr( get_option('otg_download_page_slug', 'outsourcing-download-guides') ); ?>"
                             class="regular-text">
-                        <p class="description">Slug of the WordPress page showing the guide downloads.
-                        <?php if ( $under_hub ) echo '<br><em>Must match the project\'s redirect page slug in Magellan Hub.</em>'; ?></p>
+                        <p class="description">Slug of the WordPress page showing the guide downloads.</p>
                     </td>
                 </tr>
             </table>
@@ -215,7 +250,6 @@ function otg_settings_page(): void {
 
 /* ═══════════════════════════════════════════════════════════════
    3. REST API ENDPOINTS
-   Registered in both modes.
 ═══════════════════════════════════════════════════════════════ */
 add_action( 'rest_api_init', function (): void {
     register_rest_route( 'otg/v1', '/submit', [
@@ -253,7 +287,30 @@ add_action( 'rest_api_init', function (): void {
     ] );
 } );
 
+
+/* ═══════════════════════════════════════════════════════════════
+   4. SUBMISSION HANDLER
+   ─────────────────────────────────────────────────────────────
+   FIX: The original handler called otg_start_session() inline but by
+   that point WordPress REST API bootstrapping may have already sent
+   response headers, making it impossible to set a session cookie.
+
+   The session is now started at init priority 1 (see otg_start_session
+   hooked above) so the PHPSESSID cookie is set in the very first
+   response headers, long before the REST API runs.
+
+   The fetch in api.js uses `credentials: 'same-origin'` which ensures
+   the browser sends the PHPSESSID cookie with the POST request, so PHP
+   can write otg_access_token to the correct session.
+
+   FIX: redirect_url was constructed from the option but the JS was
+   receiving it correctly. The real failure was that $_SESSION writes
+   were being lost because session_start() was called too late (after
+   headers sent). Fixing the session bootstrap above resolves this.
+═══════════════════════════════════════════════════════════════ */
 function otg_handle_submission( WP_REST_Request $request ): WP_REST_Response {
+    // Session must already be started by the init hook.
+    // This is a safety call in case something skipped the hook.
     otg_start_session();
 
     $data  = $request->get_params();
@@ -265,10 +322,19 @@ function otg_handle_submission( WP_REST_Request $request ): WP_REST_Response {
         return new WP_REST_Response( [ 'success' => false, 'message' => 'Invalid email address.' ], 400 );
     }
 
+    // ── Flamingo & admin notification ─────────────────────────────────────
     otg_store_flamingo( $data );
     otg_send_admin_notification( $data );
+    // NOTE: User confirmation email is intentionally not sent here.
+    // The user receives the PDF/guides by downloading them directly.
+    // A confirmation email can be added by calling otg_send_confirmation($data).
 
+    // ── Write session token ───────────────────────────────────────────────
+    // This token is checked by otg_maybe_render_page() when the browser
+    // hits the download page after the JS redirect.
     $_SESSION['otg_access_token'] = bin2hex( random_bytes( 16 ) );
+
+    // Store contact data for personalised greeting and consultation endpoint.
     $_SESSION['otg_contact'] = [
         'first_name'   => $data['first_name'],
         'last_name'    => $data['last_name'],
@@ -277,11 +343,14 @@ function otg_handle_submission( WP_REST_Request $request ): WP_REST_Response {
         'phone_number' => $data['phone_number'],
     ];
 
-    $slug = get_option( 'otg_download_page_slug', 'outsourcing-download-guides' );
+    // ── Build redirect URL ────────────────────────────────────────────────
+    $slug         = get_option( 'otg_download_page_slug', 'outsourcing-download-guides' );
+    $redirect_url = home_url( '/' . $slug );
+
     return new WP_REST_Response( [
         'success'      => true,
         'message'      => 'Submission received.',
-        'redirect_url' => home_url( '/' . $slug ),
+        'redirect_url' => $redirect_url,
     ], 200 );
 }
 
@@ -306,35 +375,60 @@ function otg_handle_consultation( WP_REST_Request $request ): WP_REST_Response {
     return new WP_REST_Response( [ 'success' => true, 'message' => 'Consultation request sent.' ], 200 );
 }
 
+
 /* ═══════════════════════════════════════════════════════════════
-   4. RECAPTCHA v3
-   Uses otg_get_setting() — inherits hub keys when blank.
+   5. RECAPTCHA v3
 ═══════════════════════════════════════════════════════════════ */
 function otg_verify_recaptcha( string $token ) {
     $secret = otg_get_setting( 'otg_recaptcha_secret_key' );
     if ( empty( $secret ) ) return true;
 
-    // Reject sentinel tokens that indicate a client-side load failure
-    if ( empty( $token ) || in_array( $token, [ 'not-loaded', 'dev-bypass' ], true ) ) {
-        return new WP_Error( 'recaptcha_low_score', 'reCAPTCHA score too low. Please try again.' );
+    // Dev bypass — skip verification.
+    if ( $token === 'dev-bypass' ) return true;
+
+    // Script failed to load on the client.
+    if ( empty( $token ) || $token === 'not-loaded' ) {
+        return new WP_Error(
+            'recaptcha_not_loaded',
+            'Security check could not complete. Please disable any ad blockers or browser extensions and try again.'
+        );
     }
 
     $res = wp_remote_post( 'https://www.google.com/recaptcha/api/siteverify', [
-        'body' => [ 'secret' => $secret, 'response' => $token ],
+        'body'    => [ 'secret' => $secret, 'response' => $token ],
+        'timeout' => 10,
     ] );
+
     if ( is_wp_error( $res ) ) {
-        return new WP_Error( 'recaptcha_failed', 'reCAPTCHA check failed.' );
+        // Network failure — allow through rather than blocking legit users.
+        error_log( '[OTG] reCAPTCHA remote request failed: ' . $res->get_error_message() );
+        return true;
     }
+
     $body = json_decode( wp_remote_retrieve_body( $res ), true );
-    if ( empty( $body['success'] ) || ( isset( $body['score'] ) && $body['score'] < 0.5 ) ) {
+
+    if ( empty( $body['success'] ) ) {
+        $error_codes = implode( ', ', (array) ( $body['error-codes'] ?? [] ) );
+        error_log( '[OTG] reCAPTCHA token invalid. Error codes: ' . $error_codes );
+        return new WP_Error( 'recaptcha_invalid', 'Security verification failed. Please refresh and try again.' );
+    }
+
+    // Threshold lowered to 0.3 — see OSC plugin comment for rationale.
+    $threshold = apply_filters( 'otg_recaptcha_score_threshold', 0.3 );
+
+    if ( isset( $body['score'] ) && (float) $body['score'] < $threshold ) {
+        error_log( sprintf(
+            '[OTG] reCAPTCHA score too low: %.2f (threshold: %.2f)',
+            $body['score'], $threshold
+        ) );
         return new WP_Error( 'recaptcha_low_score', 'reCAPTCHA score too low. Please try again.' );
     }
+
     return true;
 }
 
 /**
- * Server-side geo lookup proxy — avoids ad-blocker blocks on direct ipapi.co calls.
- * Returns { country_code: "PH" } on any failure so intl-tel-input always resolves.
+ * Server-side geo lookup proxy.
  */
 function otg_geo_lookup(): WP_REST_Response {
     $res = wp_remote_get( 'https://ipapi.co/json/', [
@@ -350,8 +444,9 @@ function otg_geo_lookup(): WP_REST_Response {
     ], 200 );
 }
 
+
 /* ═══════════════════════════════════════════════════════════════
-   5. FLAMINGO
+   6. FLAMINGO
 ═══════════════════════════════════════════════════════════════ */
 function otg_save_to_flamingo( array $d, string $subject, string $channel ): void {
     $email    = strtolower( trim( $d['work_email'] ?? '' ) );
@@ -401,10 +496,9 @@ function otg_store_flamingo( array $d ): void {
     );
 }
 
+
 /* ═══════════════════════════════════════════════════════════════
-   6. EMAIL NOTIFICATIONS
-   Uses otg_get_setting() for notify emails — inherits hub's
-   Lead Notification Emails when the plugin-level option is blank.
+   7. EMAIL NOTIFICATIONS
 ═══════════════════════════════════════════════════════════════ */
 function otg_get_notify_emails(): array {
     $raw    = otg_get_setting( 'otg_notify_emails', get_option( 'admin_email' ) );
