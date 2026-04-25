@@ -8,7 +8,7 @@
  *   download-guides/guide-tracker.js  initGuideTracking, getLastDownloadedGuide
  *   download-guides/consultation.js   initConsultationBtn
  *
- * window.MagellanConfig is injected by page-download-guides.php:
+ * window.MagellanConfig is injected by outsourcing-download-guides.php:
  *   consultationUrl — /wp-json/otg/v1/consultation
  *   nonce           — wp_rest nonce
  *   contact         — { first_name, last_name, company_name, work_email, phone_number }

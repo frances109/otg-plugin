@@ -3,7 +3,7 @@
  * Handles the "Book a Consultation" button on the download-guides page.
  *
  * Reads contact details from window.MagellanConfig.contact (injected from
- * the PHP session by page-download-guides.php — no re-prompting required)
+ * the PHP session by outsourcing-download-guides.php — no re-prompting required)
  * and the last-clicked guide name from guide-tracker.js.
  *
  * Export:

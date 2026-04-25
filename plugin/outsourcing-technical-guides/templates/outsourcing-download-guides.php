@@ -1,25 +1,6 @@
 <?php
 /**
- * templates/page-download-guides.php
- *
- * Dual-mode template:
- *   STANDALONE — Outputs a complete HTML document.
- *   HUB MODE   — Included by Magellan Hub's fullpage-wrapper.php.
- *
- * FIX: The session guard that previously lived in this template has been
- * moved into otg_maybe_render_page() in the main plugin file. That is the
- * correct place for the guard because:
- *
- *   1. In STANDALONE mode, template_redirect fires before any output is
- *      buffered, so wp_safe_redirect() works cleanly.
- *   2. In HUB MODE, fullpage-wrapper.php includes this template inside
- *      ob_start(), meaning headers have already been sent conceptually
- *      (wp_head() will fire). A redirect attempt here would trigger a
- *      "headers already sent" notice and silently fail.
- *
- * The template can therefore assume that if it is being rendered, access
- * has already been validated. It reads $_SESSION['otg_contact'] for the
- * personalised greeting but does NOT check or consume any access token.
+ * templates/outsourcing-download-guides.php
  */
 if ( ! defined( 'ABSPATH' ) ) exit;
 

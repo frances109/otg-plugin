@@ -9,7 +9,7 @@
  *   technical-guides/counters.js  initCounters
  *   technical-guides/api.js       submitForm
  *
- * window.MagellanConfig is injected by page-technical-guides.php:
+ * window.MagellanConfig is injected by outsourcing-technical-guides.php:
  *   ajaxUrl          — /wp-json/otg/v1/submit
  *   nonce            — wp_rest nonce
  *   recaptchaSiteKey — reCAPTCHA v3 site key (empty = skip)

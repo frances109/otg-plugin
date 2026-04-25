@@ -5,7 +5,7 @@
  * Description:  Full-page Executive Guides flow with reCAPTCHA v3 and Flamingo.
  *               Works standalone OR as a Magellan Hub project (auto-detected).
  *               Completely overrides the active theme — zero theme CSS interference.
- * Version:      1.2.0
+ * Version:      1.1.4
  * Author:       Magellan Solutions
  * License:      GPL-2.0+
  * Text Domain:  outsourcing-technical-guides
@@ -13,7 +13,7 @@
 
 if ( ! defined( 'ABSPATH' ) ) exit;
 
-define( 'OTG_VERSION',    '1.2.0' );
+define( 'OTG_VERSION',    '1.1.4' );
 define( 'OTG_PLUGIN_DIR', plugin_dir_path( __FILE__ ) );
 define( 'OTG_PLUGIN_URL', plugin_dir_url( __FILE__ ) );
 define( 'OTG_DIST_URL',   OTG_PLUGIN_URL . 'dist/' );
@@ -57,7 +57,7 @@ function otg_maybe_render_page(): void {
 
     if ( is_page( $form_slug ) ) {
         while ( ob_get_level() ) ob_end_clean();
-        include OTG_PLUGIN_DIR . 'templates/page-technical-guides.php';
+        include OTG_PLUGIN_DIR . 'templates/outsourcing-technical-guides.php';
         exit;
     }
 
@@ -72,7 +72,7 @@ function otg_maybe_render_page(): void {
         unset( $_SESSION['otg_access_token'] );
 
         while ( ob_get_level() ) ob_end_clean();
-        include OTG_PLUGIN_DIR . 'templates/page-download-guides.php';
+        include OTG_PLUGIN_DIR . 'templates/outsourcing-download-guides.php';
         exit;
     }
 }

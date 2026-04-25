@@ -66,8 +66,8 @@ outsourcing-technical-guides/
         │   ├── back-office-process-support.pdf
         │   └── technical-support-helpdesk.pdf
         └── templates/                         ← PHP page templates (standalone HTML)
-            ├── page-technical-guides.php      ← Page 1 full HTML
-            └── page-download-guides.php       ← Page 2 full HTML
+            ├── outsourcing-technical-guides.php      ← Page 1 full HTML
+            └── outsourcing-download-guides.php       ← Page 2 full HTML
 ```
 
 ---
@@ -137,8 +137,8 @@ All editable source files live in `src/`:
 | `src/css/download-guides.css` | Page 2 layout, guide cards, what's next panel |
 | `src/js/technical-guides.js` | Form logic, validation, reCAPTCHA, POST to REST API |
 | `src/js/download-guides.js` | Greeting personalisation, confetti animation |
-| `plugin/…/templates/page-technical-guides.php` | Page 1 HTML structure |
-| `plugin/…/templates/page-download-guides.php` | Page 2 HTML structure |
+| `plugin/…/templates/outsourcing-technical-guides.php` | Page 1 HTML structure |
+| `plugin/…/templates/outsourcing-download-guides.php` | Page 2 HTML structure |
 
 **Changing colors:** Edit the CSS variables at the top of `src/css/base.css`:
 ```css
@@ -242,7 +242,7 @@ Upload your files — **exact filenames required**:
 > **Why `.webp`?** It gives the best balance of quality and file size.
 > If you have `.png` or `.jpg` files, convert them at https://squoosh.app before uploading.
 > If you want to use a different format (e.g. `.jpg`), update the filename in both
-> `templates/page-technical-guides.php` and `templates/page-download-guides.php`
+> `templates/outsourcing-technical-guides.php` and `templates/outsourcing-download-guides.php`
 > on the `$bg_url` / `$logo_url` lines.
 
 ---
@@ -423,8 +423,8 @@ After editing, run `npm run build` and upload `dist/css/`.
 
 Edit the PHP template files in `plugin/outsourcing-technical-guides/templates/`:
 
-- `page-technical-guides.php` — Page 1 content (quote, stats, features, form labels)
-- `page-download-guides.php` — Page 2 content (guide card text, what's next items)
+- `outsourcing-technical-guides.php` — Page 1 content (quote, stats, features, form labels)
+- `outsourcing-download-guides.php` — Page 2 content (guide card text, what's next items)
 
 Upload the changed `.php` file via FTP. No build step or reactivation needed.
 

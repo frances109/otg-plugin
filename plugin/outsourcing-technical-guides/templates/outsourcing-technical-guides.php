@@ -1,13 +1,7 @@
 <?php
 /**
- * templates/page-technical-guides.php
- *
- * Dual-mode template — standalone and hub mode.
- *
- * FIX (Req 5 — Frontend Endpoint Mapping):
- *   MagellanConfig.ajaxUrl is now always set to the full REST URL for
- *   otg/v1/submit, never empty. The geoUrl uses the same plugin namespace
- *   for consistency.
+ * templates/outsourcing-technical-guides.php
+    
  */
 if ( ! defined( 'ABSPATH' ) ) exit;
 
